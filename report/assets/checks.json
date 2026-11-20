@@ -1,0 +1,59 @@
+{
+ "rows": {
+  "dim_date": 97,
+  "dim_series": 5000,
+  "dim_model": 5,
+  "dim_policy": 5,
+  "dim_scenario": 3,
+  "fact_sales_daily": 485000,
+  "fact_forecast": 925000,
+  "fact_order": 525000,
+  "fact_paper_policy_results": 243,
+  "security_user_city": 20
+ },
+ "days_per_series_min_max": [
+  97,
+  97
+ ],
+ "donor_share_all": 0.5603319587628866,
+ "stockout_rate_97d": 0.4396680412371134,
+ "stockout_rate_final_week": 0.4102571428571429,
+ "donor_rows_final": 20641,
+ "demand_blank_iff_censored": true,
+ "policy_cells": 15,
+ "max_cost_diff": 0.0,
+ "max_fill_diff": 0.0,
+ "scored_rows_per_cell": [
+  20641
+ ],
+ "orphan_series_keys": 0,
+ "forecast": {
+  "1": {
+   "wape": 0.337283,
+   "cov90": 0.885083,
+   "cross": 0.0
+  },
+  "2": {
+   "wape": 0.342124,
+   "cov90": 0.834746,
+   "cross": 0.0
+  },
+  "3": {
+   "wape": 0.320827,
+   "cov90": 0.873456,
+   "cross": 0.0
+  },
+  "4": {
+   "wape": 0.321347,
+   "cov90": 0.878397,
+   "cross": 0.0
+  },
+  "5": {
+   "wape": 0.397943,
+   "cov90": 0.916719,
+   "cross": 0.0
+  }
+ },
+ "paper_saving_equal": 0.14832421980306243,
+ "lock_sha256": "4ca9ea2d1e61bfb92528ad7a5d60f7aa0dbe817991960e2f086fa0614d7298be"
+}
