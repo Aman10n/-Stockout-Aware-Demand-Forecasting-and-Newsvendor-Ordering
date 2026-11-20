@@ -1,0 +1,27 @@
+cff-version: 1.2.0
+message: "If you use this work, please cite it as below."
+title: "Stockout-Aware Demand Forecasting and Newsvendor Ordering on FreshRetailNet-50K"
+type: software
+authors:
+  - given-names: Akshara
+    family-names: Kumari
+    affiliation: "SRM Institute of Science and Technology"
+  - given-names: Aman
+    family-names: Koley
+    affiliation: "SRM Institute of Science and Technology"
+  - given-names: Shivam
+    family-names: Singh
+    affiliation: "SRM Institute of Science and Technology"
+  - given-names: G.
+    family-names: Premalatha
+    affiliation: "SRM Institute of Science and Technology"
+repository-code: "https://github.com/Aman10n/-Stockout-Aware-Demand-Forecasting-and-Newsvendor-Ordering"
+keywords:
+  - censored demand
+  - stockouts
+  - demand forecasting
+  - quantile regression
+  - conformal calibration
+  - newsvendor
+  - fresh retail
+  - power bi
