@@ -1,0 +1,15 @@
+table 'Shortage Cost Ratio'
+	lineageTag: 46785bb1-6b5d-5883-9a3b-7e49b86f841a
+
+	column 'Shortage Cost Ratio'
+		dataType: double
+		formatString: 0.00
+		lineageTag: 2ae746cc-85a7-510d-8e44-9b15256f2f90
+		summarizeBy: none
+		sourceColumn: [Value]
+
+	partition 'Shortage Cost Ratio' = calculated
+		mode: import
+		source = GENERATESERIES(0.25, 5, 0.25)
+
+	annotation PBI_Id = whatif

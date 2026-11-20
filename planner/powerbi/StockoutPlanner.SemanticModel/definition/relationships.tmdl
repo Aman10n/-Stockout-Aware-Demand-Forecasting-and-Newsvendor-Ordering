@@ -1,0 +1,39 @@
+relationship 6d404d82-5caa-5b38-98e1-c40e7e87418b
+	fromColumn: fact_sales_daily.date_key
+	toColumn: dim_date.date_key
+
+relationship 964cef3e-0e1b-551f-8fe9-91aa3ccc815c
+	fromColumn: fact_sales_daily.series_key
+	toColumn: dim_series.series_key
+
+relationship 54368a02-a395-5936-ada9-34791fdc7b58
+	fromColumn: fact_forecast.date_key
+	toColumn: dim_date.date_key
+
+relationship 61bd97cd-259d-59a5-9047-85f09a8a471d
+	fromColumn: fact_forecast.series_key
+	toColumn: dim_series.series_key
+
+relationship 60b2a47d-6a63-57d2-88fa-221b8fad6a5d
+	fromColumn: fact_forecast.model_key
+	toColumn: dim_model.model_key
+
+relationship 96122e90-4125-5784-9bf8-a71fd69544f4
+	fromColumn: fact_order.date_key
+	toColumn: dim_date.date_key
+
+relationship e3495a8c-59b8-5a30-b680-04393ff249bc
+	fromColumn: fact_order.series_key
+	toColumn: dim_series.series_key
+
+relationship ed2b5138-3888-5ef8-b413-bfbf185ed190
+	fromColumn: fact_order.policy_key
+	toColumn: dim_policy.policy_key
+
+relationship cc215b2a-fa77-5b87-b2c7-569eed1031ea
+	fromColumn: fact_order.scenario_key
+	toColumn: dim_scenario.scenario_key
+
+relationship 366d024a-c220-5487-969e-dd6463112e93
+	fromColumn: fact_paper_policy_results.scenario_key
+	toColumn: dim_scenario.scenario_key

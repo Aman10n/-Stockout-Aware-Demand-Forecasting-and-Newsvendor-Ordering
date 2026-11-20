@@ -1,0 +1,393 @@
+table _Measures
+	lineageTag: a3a67c63-2eb5-5b80-b7ec-eeb75152b79d
+
+	/// Recorded sales 06:00-21:59. On stockout days this understates demand.
+	measure 'Units Sold' = SUM ( fact_sales_daily[units_sold] )
+		formatString: #,0.00
+		displayFolder: 1 Sales & stockouts
+		lineageTag: 113e89f7-b10e-5ef9-9362-985e8a30b33d
+
+	/// Exact demand, known only on full-stock (donor) days; censored days are blank, never imputed.
+	measure 'Total Demand' = SUM ( fact_sales_daily[demand_proxy] )
+		formatString: #,0.00
+		displayFolder: 1 Sales & stockouts
+		lineageTag: 7e73a7b8-c15a-5a8e-a000-a2f028e37c22
+
+	/// Number of store-product-days in the filter context.
+	measure 'Store-Product Days' = COUNTROWS ( fact_sales_daily )
+		formatString: #,0
+		displayFolder: 1 Sales & stockouts
+		lineageTag: 99ae36e2-a3a4-54f1-9a54-72635e184e33
+
+	/// Store-product-days with at least one out-of-stock hour between 06:00 and 21:59.
+	measure 'Stockout Days' = SUM ( fact_sales_daily[stockout_flag] )
+		formatString: #,0
+		displayFolder: 1 Sales & stockouts
+		lineageTag: 5aa7854c-f949-5d89-8401-44e9792023ab
+
+	/// Share of store-product-days with a stockout (real data).
+	measure 'Stockout Rate %' = DIVIDE ( [Stockout Days], [Store-Product Days] )
+		formatString: 0.0%
+		displayFolder: 1 Sales & stockouts
+		lineageTag: 16b4c3e5-2d01-5821-af43-17912a155c55
+
+	/// Out-of-stock hours between 06:00 and 21:59.
+	measure 'Stockout Hours' = SUM ( fact_sales_daily[stockout_hours] )
+		formatString: #,0
+		displayFolder: 1 Sales & stockouts
+		lineageTag: 0826e008-2514-5324-81f2-bec572460ad7
+
+	/// Share of days with no stockout, i.e. days where demand is observed exactly.
+	measure 'Full-Stock Day Share %' = DIVIDE ( SUM ( fact_sales_daily[donor_flag] ), [Store-Product Days] )
+		formatString: 0.0%
+		displayFolder: 1 Sales & stockouts
+		lineageTag: 0ebfc70e-3760-590a-8cc0-e83122181fe5
+
+	/// Time intelligence: stockout rate over the 7 days ending on the current date.
+	measure 'Stockout Rate % (7-Day Rolling)' = CALCULATE ( [Stockout Rate %], DATESINPERIOD ( dim_date[date], MAX ( dim_date[date] ), -7, DAY ) )
+		formatString: 0.0%
+		displayFolder: 1 Sales & stockouts
+		lineageTag: c74ab525-0043-5370-ae54-95fc3315c184
+
+	/// Stockout rate for the same dates one week earlier.
+	measure 'Stockout Rate % (Prior Week)' = CALCULATE ( [Stockout Rate %], DATEADD ( dim_date[date], -7, DAY ) )
+		formatString: 0.0%
+		displayFolder: 1 Sales & stockouts
+		lineageTag: e6b55da8-4719-564b-9a08-72c93ae4e677
+
+	/// Week-over-week change in stockout rate, in percentage points.
+	measure 'Stockout Rate WoW Change' = IF ( NOT ISBLANK ( [Stockout Rate % (Prior Week)] ), [Stockout Rate %] - [Stockout Rate % (Prior Week)] )
+		formatString: +0.0%;-0.0%;0.0%
+		displayFolder: 1 Sales & stockouts
+		lineageTag: c48c8ea6-e05d-5c92-af7d-9f4ff1583c86
+
+	/// Actual demand on scored (full-stock) forecast days.
+	measure 'Forecast Actual Demand' =
+			VAR _m = IF ( HASONEVALUE ( dim_model[model_key] ), VALUES ( dim_model[model_key] ), 1 )
+			RETURN
+			    CALCULATE ( SUM ( fact_forecast[actual_demand] ), dim_model[model_key] = _m )
+		formatString: #,0.00
+		displayFolder: 2 Forecast
+		lineageTag: b17251ad-05fd-5add-9382-4f5c6dd42bc3
+
+	/// Median forecast. Summing quantiles across rows is not a quantile of the sum: read at store-product-day level.
+	measure 'Forecast q50' =
+			VAR _m = IF ( HASONEVALUE ( dim_model[model_key] ), VALUES ( dim_model[model_key] ), 1 )
+			RETURN
+			    CALCULATE ( SUM ( fact_forecast[q50] ), dim_model[model_key] = _m )
+		formatString: #,0.00
+		displayFolder: 2 Forecast
+		lineageTag: eda2d524-99c4-553d-89fd-1f16a7c54f51
+
+	/// 25th percentile forecast.
+	measure 'Forecast q25' =
+			VAR _m = IF ( HASONEVALUE ( dim_model[model_key] ), VALUES ( dim_model[model_key] ), 1 )
+			RETURN
+			    CALCULATE ( SUM ( fact_forecast[q25] ), dim_model[model_key] = _m )
+		formatString: #,0.00
+		displayFolder: 2 Forecast
+		lineageTag: 186c3dd8-3142-5c26-85f1-a38b7b38378e
+
+	/// 90th percentile forecast.
+	measure 'Forecast q90' =
+			VAR _m = IF ( HASONEVALUE ( dim_model[model_key] ), VALUES ( dim_model[model_key] ), 1 )
+			RETURN
+			    CALCULATE ( SUM ( fact_forecast[q90] ), dim_model[model_key] = _m )
+		formatString: #,0.00
+		displayFolder: 2 Forecast
+		lineageTag: b5446a1c-3f32-5390-8d43-f78100c84a2e
+
+	/// Median forecast on scored days only, comparable with Forecast Actual Demand.
+	measure 'Forecast q50 (Scored Days)' =
+			VAR _m = IF ( HASONEVALUE ( dim_model[model_key] ), VALUES ( dim_model[model_key] ), 1 )
+			RETURN
+			    CALCULATE ( SUM ( fact_forecast[q50] ), fact_forecast[is_scored] = 1, dim_model[model_key] = _m )
+		formatString: #,0.00
+		displayFolder: 2 Forecast
+		lineageTag: d229a2b5-15d5-5119-b38a-cff0aa8135df
+
+	/// Forecast rows with known demand.
+	measure 'Scored Forecast Rows' =
+			VAR _m = IF ( HASONEVALUE ( dim_model[model_key] ), VALUES ( dim_model[model_key] ), 1 )
+			RETURN
+			    CALCULATE ( COUNTROWS ( fact_forecast ), fact_forecast[is_scored] = 1, dim_model[model_key] = _m )
+		formatString: #,0
+		displayFolder: 2 Forecast
+		lineageTag: 3a6328a3-c251-5cbd-9fa8-de5f18c4418b
+
+	/// Sum of |q50 - actual| on scored days.
+	measure 'Forecast Abs Error' =
+			VAR _m = IF ( HASONEVALUE ( dim_model[model_key] ), VALUES ( dim_model[model_key] ), 1 )
+			RETURN
+			    CALCULATE ( SUMX ( FILTER ( fact_forecast, fact_forecast[is_scored] = 1 ), ABS ( fact_forecast[q50] - fact_forecast[actual_demand] ) ), dim_model[model_key] = _m )
+		formatString: #,0.00
+		displayFolder: 2 Forecast
+		lineageTag: cf31b808-199d-5e1c-b18a-3f8a0f7636bd
+
+	/// Weighted absolute percentage error of the median forecast.
+	measure 'WAPE %' = DIVIDE ( [Forecast Abs Error], [Forecast Actual Demand] )
+		formatString: 0.0%
+		displayFolder: 2 Forecast
+		lineageTag: d98f2717-9c60-5f51-a3be-6ba435828ffb
+
+	/// 1 - WAPE of the median forecast.
+	measure 'Forecast Accuracy %' = IF ( NOT ISBLANK ( [WAPE %] ), 1 - [WAPE %] )
+		formatString: 0.0%
+		displayFolder: 2 Forecast
+		lineageTag: 468ceca1-3254-5326-8d46-159e266bb4fa
+
+	/// Positive = over-forecast, negative = under-forecast.
+	measure 'Forecast Bias %' = DIVIDE ( [Forecast q50 (Scored Days)] - [Forecast Actual Demand], [Forecast Actual Demand] )
+		formatString: +0.0%;-0.0%;0.0%
+		displayFolder: 2 Forecast
+		lineageTag: 93e301a6-cc2b-53c8-a93b-a4c62ab0f957
+
+	/// Share of scored days with actual demand at or below q90 (nominal 90%).
+	measure 'q90 Coverage %' =
+			VAR _m = IF ( HASONEVALUE ( dim_model[model_key] ), VALUES ( dim_model[model_key] ), 1 )
+			RETURN
+			    DIVIDE ( CALCULATE ( COUNTROWS ( FILTER ( fact_forecast, fact_forecast[is_scored] = 1 && fact_forecast[actual_demand] <= fact_forecast[q90] ) ), dim_model[model_key] = _m ), [Scored Forecast Rows] )
+		formatString: 0.0%
+		displayFolder: 2 Forecast
+		lineageTag: b48c2d1a-5884-59f4-8ee8-100e12ec6d06
+
+	/// Share of scored days with actual demand inside the q25-q75 band (nominal 50%). The model has no P10.
+	measure 'q25-q75 Band Coverage %' =
+			VAR _m = IF ( HASONEVALUE ( dim_model[model_key] ), VALUES ( dim_model[model_key] ), 1 )
+			RETURN
+			    DIVIDE ( CALCULATE ( COUNTROWS ( FILTER ( fact_forecast, fact_forecast[is_scored] = 1 && fact_forecast[actual_demand] >= fact_forecast[q25] && fact_forecast[actual_demand] <= fact_forecast[q75] ) ), dim_model[model_key] = _m ), [Scored Forecast Rows] )
+		formatString: 0.0%
+		displayFolder: 2 Forecast
+		lineageTag: 35620b7e-e6ad-54f5-8b8d-dab7070fa0ab
+
+	/// Accuracy over the 7 days ending on the current date.
+	measure 'Forecast Accuracy % (7-Day Rolling)' = CALCULATE ( [Forecast Accuracy %], DATESINPERIOD ( dim_date[date], MAX ( dim_date[date] ), -7, DAY ) )
+		formatString: 0.0%
+		displayFolder: 2 Forecast
+		lineageTag: 860e0d16-1a63-5f6d-94e2-f4d89070be70
+
+	/// Accuracy for the same dates one week earlier (forecasts exist from day 61).
+	measure 'Forecast Accuracy % (Prior Week)' = CALCULATE ( [Forecast Accuracy %], DATEADD ( dim_date[date], -7, DAY ) )
+		formatString: 0.0%
+		displayFolder: 2 Forecast
+		lineageTag: 6f4a49b9-8c6a-5173-ae28-9ee43d112cfe
+
+	/// Week-over-week change in accuracy, in percentage points.
+	measure 'Forecast Accuracy WoW Change' = IF ( NOT ISBLANK ( [Forecast Accuracy % (Prior Week)] ), [Forecast Accuracy %] - [Forecast Accuracy % (Prior Week)] )
+		formatString: +0.0%;-0.0%;0.0%
+		displayFolder: 2 Forecast
+		lineageTag: 0dd6adaa-d1b0-55a9-8c21-920ec20a7c75
+
+	/// Units ordered, all final-week days.
+	measure 'Order Qty' =
+			VAR _s = IF ( HASONEVALUE ( dim_scenario[scenario_key] ), VALUES ( dim_scenario[scenario_key] ), 2 )
+			VAR _p = IF ( HASONEVALUE ( dim_policy[policy_key] ), VALUES ( dim_policy[policy_key] ), 1 )
+			RETURN
+			    CALCULATE ( SUM ( fact_order[order_qty] ), dim_scenario[scenario_key] = _s, dim_policy[policy_key] = _p )
+		formatString: #,0.00
+		displayFolder: 3 Orders
+		lineageTag: af46bfc2-c678-506d-89d5-9c8458132470
+
+	/// Units ordered on days with known demand.
+	measure 'Order Qty (Scored Days)' =
+			VAR _s = IF ( HASONEVALUE ( dim_scenario[scenario_key] ), VALUES ( dim_scenario[scenario_key] ), 2 )
+			VAR _p = IF ( HASONEVALUE ( dim_policy[policy_key] ), VALUES ( dim_policy[policy_key] ), 1 )
+			RETURN
+			    CALCULATE ( SUM ( fact_order[order_qty] ), NOT ISBLANK ( fact_order[demand] ), dim_scenario[scenario_key] = _s, dim_policy[policy_key] = _p )
+		formatString: #,0.00
+		displayFolder: 3 Orders
+		lineageTag: 076c9424-fea6-5ba2-b888-90000a0819fe
+
+	/// Order rows with known demand.
+	measure 'Scored Order Days' =
+			VAR _s = IF ( HASONEVALUE ( dim_scenario[scenario_key] ), VALUES ( dim_scenario[scenario_key] ), 2 )
+			VAR _p = IF ( HASONEVALUE ( dim_policy[policy_key] ), VALUES ( dim_policy[policy_key] ), 1 )
+			RETURN
+			    CALCULATE ( COUNT ( fact_order[demand] ), dim_scenario[scenario_key] = _s, dim_policy[policy_key] = _p )
+		formatString: #,0
+		displayFolder: 3 Orders
+		lineageTag: 7908e70e-8324-525f-88ae-1218953b35dc
+
+	/// Demand on scored order days.
+	measure 'Order Demand' =
+			VAR _s = IF ( HASONEVALUE ( dim_scenario[scenario_key] ), VALUES ( dim_scenario[scenario_key] ), 2 )
+			VAR _p = IF ( HASONEVALUE ( dim_policy[policy_key] ), VALUES ( dim_policy[policy_key] ), 1 )
+			RETURN
+			    CALCULATE ( SUM ( fact_order[demand] ), dim_scenario[scenario_key] = _s, dim_policy[policy_key] = _p )
+		formatString: #,0.00
+		displayFolder: 3 Orders
+		lineageTag: c82d066b-56b2-5630-83ee-164f51b412ec
+
+	/// min(order, demand).
+	measure 'Sold Units' =
+			VAR _s = IF ( HASONEVALUE ( dim_scenario[scenario_key] ), VALUES ( dim_scenario[scenario_key] ), 2 )
+			VAR _p = IF ( HASONEVALUE ( dim_policy[policy_key] ), VALUES ( dim_policy[policy_key] ), 1 )
+			RETURN
+			    CALCULATE ( SUM ( fact_order[sold_units] ), dim_scenario[scenario_key] = _s, dim_policy[policy_key] = _p )
+		formatString: #,0.00
+		displayFolder: 3 Orders
+		lineageTag: 44b62453-8594-542c-b2b1-9fef0d8179da
+
+	/// Simulated: max(demand - order, 0) on scored days.
+	measure 'Lost Sales (units)' =
+			VAR _s = IF ( HASONEVALUE ( dim_scenario[scenario_key] ), VALUES ( dim_scenario[scenario_key] ), 2 )
+			VAR _p = IF ( HASONEVALUE ( dim_policy[policy_key] ), VALUES ( dim_policy[policy_key] ), 1 )
+			RETURN
+			    CALCULATE ( SUM ( fact_order[shortage_units] ), dim_scenario[scenario_key] = _s, dim_policy[policy_key] = _p )
+		formatString: #,0.00
+		displayFolder: 3 Orders
+		lineageTag: 7798b7e8-7a0b-53fb-9224-4aad64e9ce37
+
+	/// Simulated end-of-day excess, max(order - demand, 0). Fresh goods: nothing carries over.
+	measure 'Leftover Units' =
+			VAR _s = IF ( HASONEVALUE ( dim_scenario[scenario_key] ), VALUES ( dim_scenario[scenario_key] ), 2 )
+			VAR _p = IF ( HASONEVALUE ( dim_policy[policy_key] ), VALUES ( dim_policy[policy_key] ), 1 )
+			RETURN
+			    CALCULATE ( SUM ( fact_order[leftover_units] ), dim_scenario[scenario_key] = _s, dim_policy[policy_key] = _p )
+		formatString: #,0.00
+		displayFolder: 3 Orders
+		lineageTag: 288a87e3-203b-54c7-bb68-5b68df8f551c
+
+	/// Newsvendor cost c_u x shortage + c_o x leftover, at the scenario's unit costs (relative units).
+	measure 'Total Cost' =
+			VAR _s = IF ( HASONEVALUE ( dim_scenario[scenario_key] ), VALUES ( dim_scenario[scenario_key] ), 2 )
+			VAR _p = IF ( HASONEVALUE ( dim_policy[policy_key] ), VALUES ( dim_policy[policy_key] ), 1 )
+			RETURN
+			    CALCULATE ( SUM ( fact_order[cost] ), dim_scenario[scenario_key] = _s, dim_policy[policy_key] = _p )
+		formatString: #,0.00
+		displayFolder: 3 Orders
+		lineageTag: d171fda2-427f-5916-8f0b-1ef55909e68a
+
+	/// Units sold / demand on scored days.
+	measure 'Fill Rate %' = DIVIDE ( [Sold Units], [Order Demand] )
+		formatString: 0.0%
+		displayFolder: 3 Orders
+		lineageTag: eff44a01-e7f4-5661-82a4-4139ba5f69fd
+
+	/// Share of ordered units left over.
+	measure 'Leftover Share %' = DIVIDE ( [Leftover Units], [Order Qty (Scored Days)] )
+		formatString: 0.0%
+		displayFolder: 3 Orders
+		lineageTag: c101a99b-bbe8-58fc-82ce-ab61f140f107
+
+	/// Stand-in for average ending inventory in a no-carry-over newsvendor. Days of supply is not defined here.
+	measure 'Avg Leftover per Store-Product Day' = DIVIDE ( [Leftover Units], [Scored Order Days] )
+		formatString: 0.000
+		displayFolder: 3 Orders
+		lineageTag: 46b7f5ee-ba62-5b22-a29d-953faac1d963
+
+	/// Share of scored days with no shortage.
+	measure 'Cycle Service Level %' =
+			VAR _s = IF ( HASONEVALUE ( dim_scenario[scenario_key] ), VALUES ( dim_scenario[scenario_key] ), 2 )
+			VAR _p = IF ( HASONEVALUE ( dim_policy[policy_key] ), VALUES ( dim_policy[policy_key] ), 1 )
+			RETURN
+			    DIVIDE ( CALCULATE ( COUNTROWS ( fact_order ), NOT ISBLANK ( fact_order[demand] ), fact_order[shortage_units] = 0, dim_scenario[scenario_key] = _s, dim_policy[policy_key] = _p ), [Scored Order Days] )
+		formatString: 0.0%
+		displayFolder: 3 Orders
+		lineageTag: d3585c70-fd87-5007-94ec-0f2c67a25bbd
+
+	/// Average newsvendor cost per scored store-product-day.
+	measure 'Mean Cost' = DIVIDE ( [Total Cost], [Scored Order Days] )
+		formatString: 0.000
+		displayFolder: 3 Orders
+		lineageTag: a88d1eb0-36e0-5abc-9136-0af2fe6aa87a
+
+	/// Baseline: the same cost for the seasonal-naive policy.
+	measure 'Mean Cost (Seasonal Naive)' = CALCULATE ( [Mean Cost], REMOVEFILTERS ( dim_policy ), dim_policy[policy_key] = 5 )
+		formatString: 0.000
+		displayFolder: 3 Orders
+		lineageTag: b6263653-2775-54d0-b639-1d7846594e04
+
+	/// Baseline fill rate.
+	measure 'Fill Rate % (Seasonal Naive)' = CALCULATE ( [Fill Rate %], REMOVEFILTERS ( dim_policy ), dim_policy[policy_key] = 5 )
+		formatString: 0.0%
+		displayFolder: 3 Orders
+		lineageTag: 03d643cc-d9a7-5bb0-bd79-9ec0a9dfcbb7
+
+	/// Relative cost reduction against the seasonal-naive baseline.
+	measure 'Cost Saving % vs Seasonal Naive' = IF ( NOT ISBLANK ( [Mean Cost] ), 1 - DIVIDE ( [Mean Cost], [Mean Cost (Seasonal Naive)] ) )
+		formatString: 0.0%
+		displayFolder: 3 Orders
+		lineageTag: 61c4a8b4-f673-5cdc-9e9d-6beab743cadf
+
+	/// Orders exist for the 7 final days only, so this is cumulative within that week.
+	measure 'Fill Rate % (7-Day Rolling)' = CALCULATE ( [Fill Rate %], DATESINPERIOD ( dim_date[date], MAX ( dim_date[date] ), -7, DAY ) )
+		formatString: 0.0%
+		displayFolder: 3 Orders
+		lineageTag: 5dd2902f-3d75-5d8b-8142-e6e834b78b06
+
+	/// Blank by design: there is no order simulation for the week before the final week.
+	measure 'Fill Rate WoW Change' =
+			VAR _prev = CALCULATE ( [Fill Rate %], DATEADD ( dim_date[date], -7, DAY ) )
+			RETURN
+			    IF ( NOT ISBLANK ( _prev ), [Fill Rate %] - _prev )
+		formatString: +0.0%;-0.0%;0.0%
+		displayFolder: 3 Orders
+		lineageTag: 2be92f5a-7e62-5021-86bf-cb2a5e325d65
+
+	/// Selected cost of a unit short relative to a unit left over (c_u / c_o).
+	measure 'Shortage Cost Ratio Value' = SELECTEDVALUE ( 'Shortage Cost Ratio'[Shortage Cost Ratio], 1 )
+		formatString: 0.00
+		displayFolder: 4 What-if
+		lineageTag: cfc92c71-0eba-5fea-b06c-221f2ba5c0d1
+
+	/// Re-scores the orders placed for the selected scenario at the chosen cost ratio (orders are not re-optimised).
+	measure 'What-if Mean Cost' = DIVIDE ( [Lost Sales (units)] * [Shortage Cost Ratio Value] + [Leftover Units], [Scored Order Days] )
+		formatString: 0.000
+		displayFolder: 4 What-if
+		lineageTag: 594724b5-df93-5dbc-a018-1d7b8c8f1a2d
+
+	/// 1 = cheapest policy at the chosen cost ratio.
+	measure 'What-if Rank' = IF ( HASONEVALUE ( dim_policy[policy_name] ), RANKX ( ALLSELECTED ( dim_policy[policy_name] ), [What-if Mean Cost], , ASC, DENSE ) )
+		formatString: 0
+		displayFolder: 4 What-if
+		lineageTag: 37fcd25e-6693-5904-9f88-01a6bd7f22db
+
+	/// Mean newsvendor cost from the paper's final-week evaluation, averaged over train/test cells.
+	measure 'Paper Mean Cost' =
+			VAR _s = IF ( HASONEVALUE ( dim_scenario[scenario_key] ), VALUES ( dim_scenario[scenario_key] ), 2 )
+			RETURN
+			    CALCULATE ( AVERAGE ( fact_paper_policy_results[mean_cost] ), dim_scenario[scenario_key] = _s )
+		formatString: 0.000
+		displayFolder: 5 Paper (9 policies)
+		lineageTag: 4a911769-6a6b-5e52-933f-6fe742cbdd7d
+
+	/// Fill rate from the paper, averaged over cells.
+	measure 'Paper Fill Rate %' =
+			VAR _s = IF ( HASONEVALUE ( dim_scenario[scenario_key] ), VALUES ( dim_scenario[scenario_key] ), 2 )
+			RETURN
+			    CALCULATE ( AVERAGE ( fact_paper_policy_results[fill_rate] ), dim_scenario[scenario_key] = _s )
+		formatString: 0.0%
+		displayFolder: 5 Paper (9 policies)
+		lineageTag: 8b7785a0-699b-56b7-871f-efa101b28efa
+
+	/// Paper orders re-scored at the chosen cost ratio.
+	measure 'Paper What-if Mean Cost' =
+			VAR _s = IF ( HASONEVALUE ( dim_scenario[scenario_key] ), VALUES ( dim_scenario[scenario_key] ), 2 )
+			RETURN
+			    CALCULATE ( DIVIDE ( SUM ( fact_paper_policy_results[total_shortage] ) * [Shortage Cost Ratio Value] + SUM ( fact_paper_policy_results[total_leftover] ), SUM ( fact_paper_policy_results[n] ) ), dim_scenario[scenario_key] = _s )
+		formatString: 0.000
+		displayFolder: 5 Paper (9 policies)
+		lineageTag: f4ce7e91-edda-5fec-b54b-4955d2579809
+
+	/// Blank for the two TFT policies, which were scored on a 600-series subset.
+	measure 'Paper Saving % vs Seasonal Naive' =
+			IF ( SELECTEDVALUE ( fact_paper_policy_results[population] ) = "deep subsample", BLANK (),
+			    1 - DIVIDE ( [Paper Mean Cost], CALCULATE ( [Paper Mean Cost], REMOVEFILTERS ( fact_paper_policy_results[policy], fact_paper_policy_results[population] ), fact_paper_policy_results[policy] = "seasonal_naive + residual quantile" ) ) )
+		formatString: 0.0%
+		displayFolder: 5 Paper (9 policies)
+		lineageTag: 6674b877-8232-547d-95ac-ea5bbcbe45b2
+
+	column Value
+		dataType: int64
+		isHidden
+		lineageTag: 32ab52c8-ec1c-576b-bcc3-cabfd783543b
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Value]
+
+	partition _Measures = calculated
+		mode: import
+		source = {0}
+
+	annotation PBI_Id = measures

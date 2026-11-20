@@ -1,0 +1,87 @@
+table fact_forecast
+	lineageTag: 3ae31291-cf1d-54a3-a8c7-86aef6c43a23
+
+	column date_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: aedbee8c-0150-5c24-bba7-757ef29f9622
+		summarizeBy: none
+		sourceColumn: date_key
+
+	column series_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 7a21a58f-6756-5585-bbab-a5318a3a75ee
+		summarizeBy: none
+		sourceColumn: series_key
+
+	column model_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 69f25168-770b-5411-ab32-a4d800fd9e96
+		summarizeBy: none
+		sourceColumn: model_key
+
+	column q25
+		dataType: double
+		isHidden
+		formatString: 0.00
+		lineageTag: cb21d419-6abe-5a6e-84df-4abf6da15a6e
+		summarizeBy: none
+		sourceColumn: q25
+
+	column q50
+		dataType: double
+		isHidden
+		formatString: 0.00
+		lineageTag: ced7eaa4-b808-5780-bfe8-adfe73230f99
+		summarizeBy: none
+		sourceColumn: q50
+
+	column q75
+		dataType: double
+		isHidden
+		formatString: 0.00
+		lineageTag: 35f7f39a-c851-5997-a70e-262b365a2aba
+		summarizeBy: none
+		sourceColumn: q75
+
+	column q90
+		dataType: double
+		isHidden
+		formatString: 0.00
+		lineageTag: f71b274b-c00a-5451-8d87-5de2312ca8a0
+		summarizeBy: none
+		sourceColumn: q90
+
+	column actual_demand
+		dataType: double
+		isHidden
+		formatString: 0.00
+		lineageTag: 6e0baa91-2ccd-5199-b45c-f467a6ce2c34
+		summarizeBy: none
+		sourceColumn: actual_demand
+
+	column is_scored
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 1e384460-a645-5e17-8c82-469e1f8b6d54
+		summarizeBy: none
+		sourceColumn: is_scored
+
+	partition fact_forecast = m
+		mode: import
+		source =
+				let
+				    Source = Csv.Document(File.Contents(DataFolder & "fact_forecast.csv"), [Delimiter = ",", Columns = 9, Encoding = 65001, QuoteStyle = QuoteStyle.Csv]),
+				    Promoted = Table.PromoteHeaders(Source, [PromoteAllScalars = true]),
+				    Blanks = Table.ReplaceValue(Promoted, "", null, Replacer.ReplaceValue, {"date_key", "series_key", "model_key", "q25", "q50", "q75", "q90", "actual_demand", "is_scored"}),
+				    Typed = Table.TransformColumnTypes(Blanks, {{"date_key", Int64.Type}, {"series_key", Int64.Type}, {"model_key", Int64.Type}, {"q25", type number}, {"q50", type number}, {"q75", type number}, {"q90", type number}, {"actual_demand", type number}, {"is_scored", Int64.Type}}, "en-US")
+				in
+				    Typed
+
+	annotation PBI_ResultType = Table

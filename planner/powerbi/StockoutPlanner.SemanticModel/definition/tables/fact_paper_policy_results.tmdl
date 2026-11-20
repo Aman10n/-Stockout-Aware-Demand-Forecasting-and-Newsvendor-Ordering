@@ -1,0 +1,178 @@
+table fact_paper_policy_results
+	lineageTag: 7d2bcc12-997d-5c5c-b4de-4e023c0d8223
+
+	column row_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 119892e2-1382-5e8e-a18e-24f06963c6bd
+		summarizeBy: none
+		sourceColumn: row_key
+
+	column scenario
+		dataType: string
+		isHidden
+		lineageTag: ed1f4d7f-aedd-5ffa-9e9d-527b5e654ea5
+		summarizeBy: none
+		sourceColumn: scenario
+
+	column beta
+		dataType: double
+		isHidden
+		formatString: 0.00
+		lineageTag: 714f7d54-461b-57b4-8169-aa1ee8c090f3
+		summarizeBy: none
+		sourceColumn: beta
+
+	column policy
+		dataType: string
+		isHidden
+		lineageTag: 7b7c73a3-5d3c-511f-b10c-172fdad852f5
+		summarizeBy: none
+		sourceColumn: policy
+
+	column train_mech
+		dataType: string
+		isHidden
+		lineageTag: b8eddebc-d55a-524b-a74e-0a32657a9492
+		summarizeBy: none
+		sourceColumn: train_mech
+
+	column test_hist
+		dataType: string
+		isHidden
+		lineageTag: 7180942f-a7f0-59f9-822a-decf3a03774c
+		summarizeBy: none
+		sourceColumn: test_hist
+
+	column population
+		dataType: string
+		isHidden
+		lineageTag: faf50d2f-c7fa-52c7-a00d-fe8221d0e6aa
+		summarizeBy: none
+		sourceColumn: population
+
+	column unsupported_order_share
+		dataType: double
+		isHidden
+		formatString: 0.00
+		lineageTag: 9ae24e2a-e43f-5d9a-be84-66ca4baf948a
+		summarizeBy: none
+		sourceColumn: unsupported_order_share
+
+	column pool_fallback_share
+		dataType: double
+		isHidden
+		formatString: 0.00
+		lineageTag: e8c60570-9121-52d1-a625-ac99848bd576
+		summarizeBy: none
+		sourceColumn: pool_fallback_share
+
+	column n
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: ade1597f-f1c4-5240-b614-d59d7b4a5852
+		summarizeBy: none
+		sourceColumn: n
+
+	column mean_cost
+		dataType: double
+		isHidden
+		formatString: 0.00
+		lineageTag: b1e54aa7-a619-531a-b1ed-806ebbf1a398
+		summarizeBy: none
+		sourceColumn: mean_cost
+
+	column median_cost
+		dataType: double
+		isHidden
+		formatString: 0.00
+		lineageTag: 1a15c381-f5a0-5f61-a814-f5a64ad3d7a3
+		summarizeBy: none
+		sourceColumn: median_cost
+
+	column total_shortage
+		dataType: double
+		isHidden
+		formatString: 0.00
+		lineageTag: 3e5d103a-45d0-5c7b-ab46-02e6652f4cdd
+		summarizeBy: none
+		sourceColumn: total_shortage
+
+	column total_leftover
+		dataType: double
+		isHidden
+		formatString: 0.00
+		lineageTag: 506579ed-7b62-5c14-abf1-99eb72e909f3
+		summarizeBy: none
+		sourceColumn: total_leftover
+
+	column fill_rate
+		dataType: double
+		isHidden
+		formatString: 0.00
+		lineageTag: 50afc0c9-040a-5aca-acf9-8fe32aae9595
+		summarizeBy: none
+		sourceColumn: fill_rate
+
+	column leftover_share
+		dataType: double
+		isHidden
+		formatString: 0.00
+		lineageTag: 666104ec-7010-5006-85d1-8a8b18f9db47
+		summarizeBy: none
+		sourceColumn: leftover_share
+
+	column cycle_service
+		dataType: double
+		isHidden
+		formatString: 0.00
+		lineageTag: 54a38660-321b-54ee-96e9-68736bd74ec0
+		summarizeBy: none
+		sourceColumn: cycle_service
+
+	column mean_order
+		dataType: double
+		isHidden
+		formatString: 0.00
+		lineageTag: ff7eeba9-5791-50d8-a52b-a6430e1bfbb6
+		summarizeBy: none
+		sourceColumn: mean_order
+
+	column median_order
+		dataType: double
+		isHidden
+		formatString: 0.00
+		lineageTag: 3bcceea4-e6c9-5c5a-b587-ce4f70910076
+		summarizeBy: none
+		sourceColumn: median_order
+
+	column matched_cell
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 2662f273-1635-5ea5-81fa-c822db285571
+		summarizeBy: none
+		sourceColumn: matched_cell
+
+	column scenario_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 2389b47e-fea2-510c-8d0b-3309080c547c
+		summarizeBy: none
+		sourceColumn: scenario_key
+
+	partition fact_paper_policy_results = m
+		mode: import
+		source =
+				let
+				    Source = Csv.Document(File.Contents(DataFolder & "fact_paper_policy_results.csv"), [Delimiter = ",", Columns = 21, Encoding = 65001, QuoteStyle = QuoteStyle.Csv]),
+				    Promoted = Table.PromoteHeaders(Source, [PromoteAllScalars = true]),
+				    Blanks = Table.ReplaceValue(Promoted, "", null, Replacer.ReplaceValue, {"row_key", "beta", "unsupported_order_share", "pool_fallback_share", "n", "mean_cost", "median_cost", "total_shortage", "total_leftover", "fill_rate", "leftover_share", "cycle_service", "mean_order", "median_order", "matched_cell", "scenario_key"}),
+				    Typed = Table.TransformColumnTypes(Blanks, {{"row_key", Int64.Type}, {"scenario", type text}, {"beta", type number}, {"policy", type text}, {"train_mech", type text}, {"test_hist", type text}, {"population", type text}, {"unsupported_order_share", type number}, {"pool_fallback_share", type number}, {"n", Int64.Type}, {"mean_cost", type number}, {"median_cost", type number}, {"total_shortage", type number}, {"total_leftover", type number}, {"fill_rate", type number}, {"leftover_share", type number}, {"cycle_service", type number}, {"mean_order", type number}, {"median_order", type number}, {"matched_cell", Int64.Type}, {"scenario_key", Int64.Type}}, "en-US")
+				in
+				    Typed
+
+	annotation PBI_ResultType = Table

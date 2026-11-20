@@ -1,0 +1,30 @@
+table security_user_city
+	lineageTag: b53df5d1-7ce0-5075-a1f9-7e0cfb54fcfc
+	isHidden
+
+	column user_email
+		dataType: string
+		isHidden
+		lineageTag: 5787dc18-579f-5fa1-9d99-735153a57de6
+		summarizeBy: none
+		sourceColumn: user_email
+
+	column city
+		dataType: string
+		isHidden
+		lineageTag: 822ecd5a-b0c0-5f0c-97b5-d7f4c2e4a1bb
+		summarizeBy: none
+		sourceColumn: city
+
+	partition security_user_city = m
+		mode: import
+		source =
+				let
+				    Source = Csv.Document(File.Contents(DataFolder & "security_user_city.csv"), [Delimiter = ",", Columns = 2, Encoding = 65001, QuoteStyle = QuoteStyle.Csv]),
+				    Promoted = Table.PromoteHeaders(Source, [PromoteAllScalars = true]),
+				    Blanks = Table.ReplaceValue(Promoted, "", null, Replacer.ReplaceValue, {}),
+				    Typed = Table.TransformColumnTypes(Blanks, {{"user_email", type text}, {"city", type text}}, "en-US")
+				in
+				    Typed
+
+	annotation PBI_ResultType = Table

@@ -1,0 +1,24 @@
+model Model
+	culture: en-US
+	defaultPowerBIDataSourceVersion: powerBI_V3
+	sourceQueryCulture: en-US
+	dataAccessOptions
+		legacyRedirects
+		returnErrorValuesAsNull
+
+annotation __PBI_TimeIntelligenceEnabled = 0
+
+annotation PBI_QueryOrder = ["DataFolder","dim_date","dim_series","dim_model","dim_policy","dim_scenario","fact_sales_daily","fact_forecast","fact_order","fact_paper_policy_results","security_user_city"]
+
+ref table dim_date
+ref table dim_series
+ref table dim_model
+ref table dim_policy
+ref table dim_scenario
+ref table fact_sales_daily
+ref table fact_forecast
+ref table fact_order
+ref table fact_paper_policy_results
+ref table security_user_city
+ref table _Measures
+ref table 'Shortage Cost Ratio'

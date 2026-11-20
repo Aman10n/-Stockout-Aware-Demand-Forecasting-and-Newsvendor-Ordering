@@ -1,0 +1,57 @@
+table dim_scenario
+	lineageTag: daae8b52-9304-53ef-ae44-23935aae044f
+
+	column scenario_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: cef43755-d606-5511-9ecc-1632fbab9495
+		summarizeBy: none
+		sourceColumn: scenario_key
+
+	column scenario_name
+		dataType: string
+		lineageTag: 939830f3-2e93-54d0-ad45-b2f64da60372
+		summarizeBy: none
+		sourceColumn: scenario_name
+		sortByColumn: scenario_key
+
+	column c_u
+		dataType: int64
+		formatString: 0
+		lineageTag: f9bede8c-6d3d-5d7a-bb0c-211e9b364ce0
+		summarizeBy: none
+		sourceColumn: c_u
+
+	column c_o
+		dataType: int64
+		formatString: 0
+		lineageTag: 06eea414-c176-5ce3-ba70-7d5555e2d1d4
+		summarizeBy: none
+		sourceColumn: c_o
+
+	column beta
+		dataType: double
+		formatString: 0.00
+		lineageTag: 1f4655c8-49ee-5ce1-a7a9-c8ab6ae5b9eb
+		summarizeBy: none
+		sourceColumn: beta
+
+	column quantile
+		dataType: string
+		lineageTag: 0b3b78a0-08ed-59be-86ca-30ff9457fb42
+		summarizeBy: none
+		sourceColumn: quantile
+
+	partition dim_scenario = m
+		mode: import
+		source =
+				let
+				    Source = Csv.Document(File.Contents(DataFolder & "dim_scenario.csv"), [Delimiter = ",", Columns = 6, Encoding = 65001, QuoteStyle = QuoteStyle.Csv]),
+				    Promoted = Table.PromoteHeaders(Source, [PromoteAllScalars = true]),
+				    Blanks = Table.ReplaceValue(Promoted, "", null, Replacer.ReplaceValue, {"scenario_key", "c_u", "c_o", "beta"}),
+				    Typed = Table.TransformColumnTypes(Blanks, {{"scenario_key", Int64.Type}, {"scenario_name", type text}, {"c_u", Int64.Type}, {"c_o", Int64.Type}, {"beta", type number}, {"quantile", type text}}, "en-US")
+				in
+				    Typed
+
+	annotation PBI_ResultType = Table

@@ -1,0 +1,100 @@
+table dim_date
+	lineageTag: 48acde0a-3bfd-54fa-a412-1ebb73d15baa
+	dataCategory: Time
+
+	column date_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 7232d509-f41b-518e-812d-01891a5c3cd7
+		summarizeBy: none
+		sourceColumn: date_key
+
+	column date
+		dataType: dateTime
+		isKey
+		formatString: dd mmm yyyy
+		lineageTag: 73270b91-9c0f-5d9a-bb4c-4c082ef1e68e
+		summarizeBy: none
+		sourceColumn: date
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column day_index
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: ba80a277-dbaa-5bdb-8e70-1e46112f8a86
+		summarizeBy: none
+		sourceColumn: day_index
+
+	column weekday_num
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 5988267d-8e4b-5fc3-b2f8-ee083c424692
+		summarizeBy: none
+		sourceColumn: weekday_num
+
+	column weekday_name
+		dataType: string
+		lineageTag: 7e1e7b01-c760-5752-a30a-8ab56166f8d8
+		summarizeBy: none
+		sourceColumn: weekday_name
+		sortByColumn: weekday_num
+
+	column week_start
+		dataType: dateTime
+		formatString: dd mmm yyyy
+		lineageTag: 3eb19e04-7cf3-5ade-995f-9215a105d68c
+		summarizeBy: none
+		sourceColumn: week_start
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column iso_week
+		dataType: int64
+		formatString: 0
+		lineageTag: 6d45f80e-1b06-54ef-92dc-12ae6334c6bb
+		summarizeBy: none
+		sourceColumn: iso_week
+
+	column month_name
+		dataType: string
+		lineageTag: 31d025a2-f79f-5897-a678-82c229296551
+		summarizeBy: none
+		sourceColumn: month_name
+
+	column is_weekend
+		dataType: boolean
+		lineageTag: 4fc894e1-fd3b-55ad-9023-939514aec099
+		summarizeBy: none
+		sourceColumn: is_weekend
+
+	column period
+		dataType: string
+		lineageTag: ea0689cd-13ba-5694-b370-f3fd459ad312
+		summarizeBy: none
+		sourceColumn: period
+		sortByColumn: period_order
+
+	column period_order
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: f9f78cff-2e16-5fb0-a735-6d205b5bb397
+		summarizeBy: none
+		sourceColumn: period_order
+
+	partition dim_date = m
+		mode: import
+		source =
+				let
+				    Source = Csv.Document(File.Contents(DataFolder & "dim_date.csv"), [Delimiter = ",", Columns = 11, Encoding = 65001, QuoteStyle = QuoteStyle.Csv]),
+				    Promoted = Table.PromoteHeaders(Source, [PromoteAllScalars = true]),
+				    Blanks = Table.ReplaceValue(Promoted, "", null, Replacer.ReplaceValue, {"date_key", "date", "day_index", "weekday_num", "week_start", "iso_week", "is_weekend", "period_order"}),
+				    Typed = Table.TransformColumnTypes(Blanks, {{"date_key", Int64.Type}, {"date", type date}, {"day_index", Int64.Type}, {"weekday_num", Int64.Type}, {"weekday_name", type text}, {"week_start", type date}, {"iso_week", Int64.Type}, {"month_name", type text}, {"is_weekend", type logical}, {"period", type text}, {"period_order", Int64.Type}}, "en-US")
+				in
+				    Typed
+
+	annotation PBI_ResultType = Table

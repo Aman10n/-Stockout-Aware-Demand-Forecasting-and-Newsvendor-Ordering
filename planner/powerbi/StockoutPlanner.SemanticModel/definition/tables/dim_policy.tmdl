@@ -1,0 +1,48 @@
+table dim_policy
+	lineageTag: ae65122e-d7da-51b7-abda-438fb4830c95
+
+	column policy_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 27eb32a8-7d68-51af-8c0b-d021c6288281
+		summarizeBy: none
+		sourceColumn: policy_key
+
+	column policy_code
+		dataType: string
+		lineageTag: 57f42b53-b782-56b8-bb34-7fab3a2baf80
+		summarizeBy: none
+		sourceColumn: policy_code
+
+	column policy_name
+		dataType: string
+		lineageTag: ae2e225f-b620-5469-b7b7-0bd62e9d2633
+		summarizeBy: none
+		sourceColumn: policy_name
+		sortByColumn: policy_key
+
+	column stockout_aware
+		dataType: boolean
+		lineageTag: a534e8cb-ff7b-5aa1-a924-c135837e6b38
+		summarizeBy: none
+		sourceColumn: stockout_aware
+
+	column description
+		dataType: string
+		lineageTag: 5d60d35d-5cda-5ffc-9fdb-c4a784e057cd
+		summarizeBy: none
+		sourceColumn: description
+
+	partition dim_policy = m
+		mode: import
+		source =
+				let
+				    Source = Csv.Document(File.Contents(DataFolder & "dim_policy.csv"), [Delimiter = ",", Columns = 5, Encoding = 65001, QuoteStyle = QuoteStyle.Csv]),
+				    Promoted = Table.PromoteHeaders(Source, [PromoteAllScalars = true]),
+				    Blanks = Table.ReplaceValue(Promoted, "", null, Replacer.ReplaceValue, {"policy_key", "stockout_aware"}),
+				    Typed = Table.TransformColumnTypes(Blanks, {{"policy_key", Int64.Type}, {"policy_code", type text}, {"policy_name", type text}, {"stockout_aware", type logical}, {"description", type text}}, "en-US")
+				in
+				    Typed
+
+	annotation PBI_ResultType = Table

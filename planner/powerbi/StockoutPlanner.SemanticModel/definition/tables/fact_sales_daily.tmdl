@@ -1,0 +1,103 @@
+table fact_sales_daily
+	lineageTag: 4f3d99fb-c78c-5df0-9744-f168192fbf08
+
+	column date_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 95b4987d-7624-5744-bffe-0ea15c2d9a47
+		summarizeBy: none
+		sourceColumn: date_key
+
+	column series_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 04d19c46-3719-5dcc-9f0d-d7a868721923
+		summarizeBy: none
+		sourceColumn: series_key
+
+	column units_sold
+		dataType: double
+		isHidden
+		formatString: 0.00
+		lineageTag: c1b4d6c4-8a0f-568d-b1e1-e0d19a62c3e9
+		summarizeBy: none
+		sourceColumn: units_sold
+
+	column units_sold_24h
+		dataType: double
+		isHidden
+		formatString: 0.00
+		lineageTag: 609ff899-4343-5f8d-ba37-11b4bae7c12c
+		summarizeBy: none
+		sourceColumn: units_sold_24h
+
+	column stockout_hours
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 45f24604-8a89-5a23-8a9e-0521f7990936
+		summarizeBy: none
+		sourceColumn: stockout_hours
+
+	column stockout_flag
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 065e881e-9878-5ff2-a900-41acffd652c1
+		summarizeBy: none
+		sourceColumn: stockout_flag
+
+	column donor_flag
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 89ce7de6-27b2-5613-bdc2-abf8e94d96c8
+		summarizeBy: none
+		sourceColumn: donor_flag
+
+	column demand_proxy
+		dataType: double
+		isHidden
+		formatString: 0.00
+		lineageTag: 22def2f5-a6e3-5ec7-8b48-e414731fc948
+		summarizeBy: none
+		sourceColumn: demand_proxy
+
+	column discount
+		dataType: double
+		isHidden
+		formatString: 0.00
+		lineageTag: 9a6c782c-3591-5302-9144-a8ccd0cd0c47
+		summarizeBy: none
+		sourceColumn: discount
+
+	column activity_flag
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 9a2dee2c-a60c-5e70-b3fe-5a637de7b535
+		summarizeBy: none
+		sourceColumn: activity_flag
+
+	column holiday_flag
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: ebcbde5b-005b-5eac-ab17-3b092082a739
+		summarizeBy: none
+		sourceColumn: holiday_flag
+
+	partition fact_sales_daily = m
+		mode: import
+		source =
+				let
+				    Source = Csv.Document(File.Contents(DataFolder & "fact_sales_daily.csv"), [Delimiter = ",", Columns = 11, Encoding = 65001, QuoteStyle = QuoteStyle.Csv]),
+				    Promoted = Table.PromoteHeaders(Source, [PromoteAllScalars = true]),
+				    Blanks = Table.ReplaceValue(Promoted, "", null, Replacer.ReplaceValue, {"date_key", "series_key", "units_sold", "units_sold_24h", "stockout_hours", "stockout_flag", "donor_flag", "demand_proxy", "discount", "activity_flag", "holiday_flag"}),
+				    Typed = Table.TransformColumnTypes(Blanks, {{"date_key", Int64.Type}, {"series_key", Int64.Type}, {"units_sold", type number}, {"units_sold_24h", type number}, {"stockout_hours", Int64.Type}, {"stockout_flag", Int64.Type}, {"donor_flag", Int64.Type}, {"demand_proxy", type number}, {"discount", type number}, {"activity_flag", Int64.Type}, {"holiday_flag", Int64.Type}}, "en-US")
+				in
+				    Typed
+
+	annotation PBI_ResultType = Table

@@ -1,0 +1,48 @@
+table dim_model
+	lineageTag: 19a68b00-78c7-57d6-9c30-fa89aae740ac
+
+	column model_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 8611bdb3-ad84-5e8e-97b8-eeb1cc9404b0
+		summarizeBy: none
+		sourceColumn: model_key
+
+	column model_code
+		dataType: string
+		lineageTag: 226040f6-5852-5e5c-a40f-ddb35ab32a13
+		summarizeBy: none
+		sourceColumn: model_code
+
+	column model_name
+		dataType: string
+		lineageTag: eaf00716-bb3a-5eac-8be8-fcc3f9d5bfc1
+		summarizeBy: none
+		sourceColumn: model_name
+		sortByColumn: model_key
+
+	column stockout_aware
+		dataType: boolean
+		lineageTag: 5a602c7d-7e5e-56fb-a5ba-50b75a1d0bd8
+		summarizeBy: none
+		sourceColumn: stockout_aware
+
+	column description
+		dataType: string
+		lineageTag: bfd7e693-895d-5aa1-b46b-2dfec4af8fa2
+		summarizeBy: none
+		sourceColumn: description
+
+	partition dim_model = m
+		mode: import
+		source =
+				let
+				    Source = Csv.Document(File.Contents(DataFolder & "dim_model.csv"), [Delimiter = ",", Columns = 5, Encoding = 65001, QuoteStyle = QuoteStyle.Csv]),
+				    Promoted = Table.PromoteHeaders(Source, [PromoteAllScalars = true]),
+				    Blanks = Table.ReplaceValue(Promoted, "", null, Replacer.ReplaceValue, {"model_key", "stockout_aware"}),
+				    Typed = Table.TransformColumnTypes(Blanks, {{"model_key", Int64.Type}, {"model_code", type text}, {"model_name", type text}, {"stockout_aware", type logical}, {"description", type text}}, "en-US")
+				in
+				    Typed
+
+	annotation PBI_ResultType = Table

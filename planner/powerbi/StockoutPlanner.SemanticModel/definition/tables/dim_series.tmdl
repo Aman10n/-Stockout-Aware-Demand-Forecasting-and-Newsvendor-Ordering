@@ -1,0 +1,114 @@
+table dim_series
+	lineageTag: a7ffd6d0-87a6-5e3e-a905-1819ee04839e
+
+	column series_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 2a2fa4f8-f42b-553c-b6f3-84cb56a8cb89
+		summarizeBy: none
+		sourceColumn: series_key
+
+	column city_id
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: cd0787bf-91ac-53c2-aa4b-214891e68bea
+		summarizeBy: none
+		sourceColumn: city_id
+
+	column store_id
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: d250cd15-982a-57e9-b8e9-27d34e39d149
+		summarizeBy: none
+		sourceColumn: store_id
+
+	column product_id
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: f2704047-c508-55de-970b-f5ce1949e9af
+		summarizeBy: none
+		sourceColumn: product_id
+
+	column city
+		dataType: string
+		lineageTag: 29858e4f-3b5d-53da-865e-bcbe2b371a26
+		summarizeBy: none
+		sourceColumn: city
+
+	column store
+		dataType: string
+		lineageTag: 1d7f79db-e92e-5bb8-b8e9-229458fac5f6
+		summarizeBy: none
+		sourceColumn: store
+
+	column product
+		dataType: string
+		lineageTag: 6736798b-2973-5911-8e0b-c3858b2877ac
+		summarizeBy: none
+		sourceColumn: product
+
+	column store_product
+		dataType: string
+		lineageTag: 4c4d8954-1d83-510a-ac81-b5e5daf01138
+		summarizeBy: none
+		sourceColumn: store_product
+
+	column management_group
+		dataType: string
+		lineageTag: 9614b88b-d4fa-59c5-9601-c8d7548633d7
+		summarizeBy: none
+		sourceColumn: management_group
+
+	column category_l1
+		dataType: string
+		lineageTag: 86e487d1-2829-5cb4-b0fb-2001bf2e43c3
+		summarizeBy: none
+		sourceColumn: category_l1
+
+	column category_l2
+		dataType: string
+		lineageTag: 4fe608cf-5d20-5d14-9b1f-443ded130382
+		summarizeBy: none
+		sourceColumn: category_l2
+
+	column category_l3
+		dataType: string
+		lineageTag: e8346142-406a-5cc3-8624-d469578e99b6
+		summarizeBy: none
+		sourceColumn: category_l3
+
+	column sales_tier
+		dataType: string
+		lineageTag: c547fea8-49df-52e4-94df-ccf6af29098b
+		summarizeBy: none
+		sourceColumn: sales_tier
+
+	column stockout_tier
+		dataType: string
+		lineageTag: 81d483a2-1f0c-53bf-8695-d6f25874680f
+		summarizeBy: none
+		sourceColumn: stockout_tier
+
+	column planner_url
+		dataType: string
+		lineageTag: 6159c721-da16-50df-95f1-ae933a36ae71
+		summarizeBy: none
+		sourceColumn: planner_url
+		dataCategory: WebUrl
+
+	partition dim_series = m
+		mode: import
+		source =
+				let
+				    Source = Csv.Document(File.Contents(DataFolder & "dim_series.csv"), [Delimiter = ",", Columns = 15, Encoding = 65001, QuoteStyle = QuoteStyle.Csv]),
+				    Promoted = Table.PromoteHeaders(Source, [PromoteAllScalars = true]),
+				    Blanks = Table.ReplaceValue(Promoted, "", null, Replacer.ReplaceValue, {"series_key", "city_id", "store_id", "product_id"}),
+				    Typed = Table.TransformColumnTypes(Blanks, {{"series_key", Int64.Type}, {"city_id", Int64.Type}, {"store_id", Int64.Type}, {"product_id", Int64.Type}, {"city", type text}, {"store", type text}, {"product", type text}, {"store_product", type text}, {"management_group", type text}, {"category_l1", type text}, {"category_l2", type text}, {"category_l3", type text}, {"sales_tier", type text}, {"stockout_tier", type text}, {"planner_url", type text}}, "en-US")
+				in
+				    Typed
+
+	annotation PBI_ResultType = Table

@@ -1,0 +1,5 @@
+expression DataFolder = "C:\ML project\stockout\stockout\planner\output\warehouse\" meta [IsParameterQuery = true, Type = "Text", IsParameterQueryRequired = true]
+	lineageTag: 714af3a1-3829-59a9-92ea-f72c40ba52a8
+
+	annotation PBI_ResultType = Text
+

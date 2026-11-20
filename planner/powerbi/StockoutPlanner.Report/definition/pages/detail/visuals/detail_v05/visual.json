@@ -1,0 +1,116 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.4.0/schema.json",
+  "name": "detail_v05",
+  "position": {
+    "x": 856,
+    "y": 142,
+    "z": 5000,
+    "width": 404,
+    "height": 340,
+    "tabOrder": 5000
+  },
+  "visual": {
+    "visualType": "tableEx",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_series"
+                    }
+                  },
+                  "Property": "store_product"
+                }
+              },
+              "queryRef": "dim_series.store_product",
+              "nativeQueryRef": "store_product"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_series"
+                    }
+                  },
+                  "Property": "category_l1"
+                }
+              },
+              "queryRef": "dim_series.category_l1",
+              "nativeQueryRef": "category_l1"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_series"
+                    }
+                  },
+                  "Property": "sales_tier"
+                }
+              },
+              "queryRef": "dim_series.sales_tier",
+              "nativeQueryRef": "sales_tier"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_series"
+                    }
+                  },
+                  "Property": "stockout_tier"
+                }
+              },
+              "queryRef": "dim_series.stockout_tier",
+              "nativeQueryRef": "stockout_tier"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_series"
+                    }
+                  },
+                  "Property": "planner_url"
+                }
+              },
+              "queryRef": "dim_series.planner_url",
+              "nativeQueryRef": "planner_url"
+            }
+          ]
+        }
+      }
+    },
+    "drillFilterOtherVisuals": true,
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Open this store-product in the planner app'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

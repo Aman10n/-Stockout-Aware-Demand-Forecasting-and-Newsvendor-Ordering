@@ -1,0 +1,5 @@
+/// Static demo role: only City 00.
+role 'City 00 Manager (demo)'
+	modelPermission: read
+
+	tablePermission dim_series = [city] = "City 00"

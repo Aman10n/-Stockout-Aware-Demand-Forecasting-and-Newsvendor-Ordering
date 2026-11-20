@@ -1,0 +1,5 @@
+/// Dynamic RLS: a signed-in manager sees only the cities mapped to their e-mail in security_user_city.
+role 'City Manager'
+	modelPermission: read
+
+	tablePermission dim_series = [city] IN CALCULATETABLE ( VALUES ( security_user_city[city] ), security_user_city[user_email] = USERPRINCIPALNAME () )
